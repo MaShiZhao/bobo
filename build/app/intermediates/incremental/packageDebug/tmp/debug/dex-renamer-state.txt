@@ -1,0 +1,4 @@
+#Fri Apr 26 14:17:03 CST 2019
+base.0=/Users/mashizhao304/Desktop/flutter/flutter_bobo/build/app/intermediates/transforms/dexMerger/debug/0
+path.0=classes.dex
+renamed.0=classes.dex
