@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bobo/components/month_item.dart';
+import 'package:flutter_bobo/sql/provider.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  final provider = new Provider();
+  await provider.init(true);
+  runApp(MyApp());
+}
 
 double screenWidth, screenHeight;
 
@@ -9,7 +14,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       title: '波波记一笔',
       theme: ThemeData(
@@ -46,13 +50,14 @@ class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
+
 //创建月份的item布局
 _buildMonthChild() {
   MonthItemContainer monthChildContainer = MonthItemContainer(columnCount: 10);
 
   return Container(
     color: Colors.white,
-    height:screenHeight,
+    height: screenHeight,
     child: monthChildContainer,
   );
 }
@@ -60,16 +65,9 @@ _buildMonthChild() {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
+    screenWidth = MediaQuery.of(context).size.width;
 
-    screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-
-    screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
+    screenHeight = MediaQuery.of(context).size.height;
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -77,13 +75,44 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-        appBar: AppBar(
-          title: Text("四月"),
-        ),
-        body: ListView(
-          children: <Widget>[
-            _buildMonthChild(),
+      appBar: AppBar(
+        title: Text("四月"),
+      ),
+      body: ListView(
+        children: <Widget>[
+          _buildMonthChild(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _incrementCounter(context);
+        },
+        tooltip: 'Increment',
+        child: Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  _incrementCounter(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          //title: Text('免责声明'),
+          content: SingleChildScrollView(
+            child: Text('免责声明',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          ),
+          shape: RoundedRectangleBorder(
+              borderRadius: new BorderRadius.circular(20.0)), // 圆角
+
+          actions: <Widget>[
+            new Container(
+              width: 250,
+            )
           ],
-        ));
+        );
+      },
+    );
   }
 }
