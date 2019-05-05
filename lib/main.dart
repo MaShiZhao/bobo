@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bobo/components/month_item.dart';
 import 'package:flutter_bobo/sql/provider.dart';
+import 'package:flutter_bobo/views/add_dialog.dart';
 
 void main() async {
   final provider = new Provider();
@@ -85,7 +86,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _incrementCounter(context);
+          Navigator.push(
+              context, new MaterialPageRoute(builder: (context) => new AddDialog()));
         },
         tooltip: 'Increment',
         child: Icon(Icons.add),
@@ -93,26 +95,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  _incrementCounter(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          //title: Text('免责声明'),
-          content: SingleChildScrollView(
-            child: Text('免责声明',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          ),
-          shape: RoundedRectangleBorder(
-              borderRadius: new BorderRadius.circular(20.0)), // 圆角
-
-          actions: <Widget>[
-            new Container(
-              width: 250,
-            )
-          ],
-        );
-      },
-    );
-  }
 }
