@@ -1,15 +1,19 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bobo/components/month_item.dart';
 import 'package:flutter_bobo/sql/provider.dart';
 import 'package:flutter_bobo/views/add_dialog.dart';
+
+import 'model/item.dart';
+import 'model/organization.dart';
+import 'routers/application.dart';
 
 void main() async {
   final provider = new Provider();
   await provider.init(true);
   runApp(MyApp());
 }
-
-double screenWidth, screenHeight;
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -37,47 +41,65 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-//创建月份的item布局
-_buildMonthChild() {
-  MonthItemContainer monthChildContainer = MonthItemContainer(columnCount: 10);
-
-  return Container(
-    color: Colors.white,
-    height: screenHeight,
-    child: monthChildContainer,
-  );
-}
-
 class _MyHomePageState extends State<MyHomePage> {
+  double screenWidth, screenHeight;
+  Map<String, Organization> organizations;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    ItemModel _itemModel = new ItemModel();
+    List<Item> items = [];
+    organizations = new HashMap();
+    _itemModel
+        .getItemOfMonth(
+            year: Application.dateTimeCurrent.year,
+            month: Application.dateTimeCurrent.month)
+        .then((resultList) {
+      print("-----");
+      print(resultList.toString());
+      resultList.forEach((item) {
+        items.add(item);
+      });
+
+      organizations.clear();
+      items.forEach((item) {
+        Student student =
+            new Student(item.studentName, item.time, double.parse(item.price));
+        if (organizations.keys.contains(item.organization)) {
+          organizations[item.organization].students.add(student);
+        } else {
+          Organization organization = new Organization(item.organization);
+          organization.students.add(student);
+          organizations[item.organization] = organization;
+        }
+      });
+
+      if (this.mounted) {
+        setState(() {
+          organizations = organizations;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
 
     screenHeight = MediaQuery.of(context).size.height;
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("四月"),
+        title: Text("${Application.dateTimeCurrent.year}年${Application.dateTimeCurrent.month}月"),
       ),
       body: ListView(
         children: <Widget>[
@@ -86,8 +108,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-              context, new MaterialPageRoute(builder: (context) => new AddDialog()));
+          Navigator.push(context,
+              new MaterialPageRoute(builder: (context) => new AddDialog()));
         },
         tooltip: 'Increment',
         child: Icon(Icons.add),
@@ -95,4 +117,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  //创建月份的item布局
+  _buildMonthChild() {
+    MonthItemContainer monthChildContainer =
+        MonthItemContainer(organizations: organizations);
+
+    return Container(
+      color: Colors.white,
+      height: screenHeight,
+      child: monthChildContainer,
+    );
+  }
 }

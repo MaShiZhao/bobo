@@ -1,42 +1,57 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_bobo/model/item.dart';
 import 'package:flutter_bobo/resources/font_size.dart';
 
-TextEditingController _controllerOriginal,
-    _controllerTime,
-    _controllerName,
-    _controllerPrice,
-    _controllerRemakes;
+GlobalKey<ScaffoldState> _scaffoldKey;
+
+TextEditingController _controllerOriginal;
+
+TextEditingController _controllerName;
+
+TextEditingController _controllerPrice;
+
+TextEditingController _controllerRemakes;
 
 var _dateTime;
-
-DateTime _dateTimeNow = new DateTime.now();
 
 class AddDialog extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
+    _scaffoldKey = GlobalKey<ScaffoldState>();
+    _controllerOriginal = new TextEditingController();
+    _controllerName = new TextEditingController();
+    _controllerPrice = new TextEditingController();
+    _controllerRemakes = new TextEditingController();
+
     return _AddDialogState();
   }
 }
 
 class _AddDialogState extends State<AddDialog> {
+  ItemModel _itemModel = new ItemModel();
+  DateTime _dateTimeCurrent = new DateTime.now();
+  Timer _timer;
+
   @override
   Widget build(BuildContext context) {
-//    _controllerOriginal = new TextEditingController();
     if (_dateTime == null) {
-      _dateTime = _getDateTimeString(_dateTimeNow);
+      _dateTime = _getDateTimeString(_dateTimeCurrent);
     }
     return Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           title: Text("添加"),
           actions: <Widget>[
-            new IconButton(icon: new Icon(Icons.add) , onPressed: (){
-              Fluttertoast.showToast(msg: "add");
-             })
+            new IconButton(
+                icon: new Icon(Icons.add),
+                onPressed: () {
+                  _insertSql();
+                })
           ],
-
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -154,6 +169,7 @@ class _AddDialogState extends State<AddDialog> {
         new Container(width: 10, height: 1),
         new Expanded(
             child: new TextField(
+          keyboardType: TextInputType.number,
           controller: _controllerPrice,
           decoration:
               new InputDecoration(hintText: '请输入授课价格', fillColor: Colors.grey),
@@ -199,11 +215,12 @@ class _AddDialogState extends State<AddDialog> {
   Future _showDate() async {
     DateTime picked = await showDatePicker(
         context: context,
-        initialDate: _dateTimeNow,
-        firstDate: new DateTime(_dateTimeNow.year - 1),
-        lastDate: new DateTime(_dateTimeNow.year + 1));
+        initialDate: _dateTimeCurrent,
+        firstDate: new DateTime(_dateTimeCurrent.year - 1),
+        lastDate: new DateTime(_dateTimeCurrent.year + 1));
     if (picked != null)
       setState(() {
+        _dateTimeCurrent = picked;
         _dateTime = _getDateTimeString(picked);
       });
   }
@@ -213,5 +230,52 @@ class _AddDialogState extends State<AddDialog> {
     int month = dateTime.month;
     int day = dateTime.day;
     return '$year-$month-$day';
+  }
+
+  void _insertSql() {
+    if (_controllerOriginal.value.text.isEmpty) {
+      showSnackBar('_controllerOriginal is empty');
+    } else if (_controllerName.value.text.isEmpty) {
+      showSnackBar('_controllerName is empty');
+    } else if (_controllerPrice.value.text.isEmpty) {
+      showSnackBar('_controllerPrice is empty');
+    } else {
+      _itemModel
+          .insert(Item(
+              organization: _controllerOriginal.value.text,
+              studentName: _controllerName.value.text,
+              price: _controllerPrice.value.text,
+              time: _dateTimeCurrent.millisecondsSinceEpoch.toString(),
+              remarks: _controllerRemakes.value.text))
+          .then((result) {
+        if (this.mounted) {
+          _scaffoldKey.currentState
+              .showSnackBar(SnackBar(content: Text('添加成功')));
+          _timer = new Timer.periodic(
+              Duration(seconds: 3),
+              (Timer timer) => setState(() {
+                    Navigator.pop(context);
+                  }));
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _controllerOriginal.dispose();
+    _controllerName.dispose();
+    _controllerPrice.dispose();
+    _controllerRemakes.dispose();
+    super.dispose();
+  }
+
+  void showSnackBar(String text) {
+    _scaffoldKey.currentState.showSnackBar(SnackBar(
+      content: Text(text),
+      backgroundColor: Colors.blueAccent,
+      duration: const Duration(seconds: 2),
+    ));
   }
 }
